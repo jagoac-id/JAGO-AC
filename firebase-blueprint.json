@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "Order": {
+      "title": "Order",
+      "description": "An order submitted by a customer via the landing page.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "phone": { "type": "string" },
+        "address": { "type": "string" },
+        "area": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "notes": { "type": "string" },
+        "items": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "price": { "type": "number" },
+              "quantity": { "type": "number" }
+            }
+          }
+        },
+        "subTotal": { "type": "number" },
+        "promo": { 
+          "type": ["object", "null"],
+          "properties": {
+            "code": { "type": "string" },
+            "discount": { "type": "number" }
+          }
+        },
+        "total": { "type": "number" },
+        "status": { 
+          "type": "string",
+          "enum": ["Pending", "Sedang Dikerjakan", "Selesai"]
+        },
+        "createdAt": { "type": "string" },
+        "extraCosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "description": { "type": "string" },
+              "amount": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["id", "customerName", "phone", "address", "area", "date", "time", "items", "subTotal", "total", "status", "createdAt"]
+    },
+    "TechnicianReport": {
+      "title": "Technician Report",
+      "description": "A service checklist and photo report submitted by a technician after servicing an AC unit.",
+      "type": "object",
+      "properties": {
+        "orderId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "technicianName": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "indoorChecklist": {
+          "type": "object",
+          "properties": {
+            "filter": { "$ref": "#/definitions/ChecklistItem" },
+            "evaporator": { "$ref": "#/definitions/ChecklistItem" },
+            "fan": { "$ref": "#/definitions/ChecklistItem" },
+            "swing": { "$ref": "#/definitions/ChecklistItem" },
+            "remote": { "$ref": "#/definitions/ChecklistItem" }
+          }
+        },
+        "outdoorChecklist": {
+          "type": "object",
+          "properties": {
+            "compressor": { "$ref": "#/definitions/ChecklistItem" },
+            "fan": { "$ref": "#/definitions/ChecklistItem" },
+            "condenser": { "$ref": "#/definitions/ChecklistItem" },
+            "gasPressure": { "$ref": "#/definitions/ChecklistItem" }
+          }
+        },
+        "photoBefore": { "type": "string" },
+        "photoAfter": { "type": "string" },
+        "notes": { "type": "string" }
+      },
+      "required": ["orderId", "customerName", "technicianName", "timestamp", "indoorChecklist", "outdoorChecklist"]
+    }
+  },
+  "definitions": {
+    "ChecklistItem": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["Normal", "Bermasalah", "Tidak Dicek"] },
+        "issue": { "type": "string" }
+      },
+      "required": ["status"]
+    }
+  },
+  "firestore": {
+    "/technicianReports/{reportId}": {
+      "schema": { "$ref": "#/entities/TechnicianReport" },
+      "description": "Collection of reports submitted by technicians"
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Collection of customer orders"
+    },
+    "/technicians/{techId}": {
+      "schema": { "title": "Technician", "type": "object", "properties": { "name": { "type": "string" }, "phone": { "type": "string" } }, "required": ["name", "phone"] },
+      "description": "Collection of technicians"
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "title": "Expense", "type": "object", "properties": { "date": { "type": "string" }, "description": { "type": "string" }, "amount": { "type": "number" } }, "required": ["date", "description", "amount"] },
+      "description": "Collection of expense logs"
+    }
+  }
+}

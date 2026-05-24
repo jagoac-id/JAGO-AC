@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Global Primitives
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && 
+             request.auth.token.email_verified == true && 
+             request.auth.token.email in ['anjaspratama0987@gmail.com', 'jagoacmks@gmail.com']; 
+    }
+    
+    // Primitive Validation
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll(['id', 'customerName', 'phone', 'address', 'area', 'date', 'time', 'items', 'subTotal', 'total', 'status', 'createdAt']) &&
+             data.id is string && data.id.size() <= 50 &&
+             data.customerName is string && data.customerName.size() <= 100 &&
+             data.phone is string && data.phone.size() <= 20 &&
+             data.address is string && data.address.size() <= 300 &&
+             data.area is string && data.area.size() <= 100 &&
+             data.date is string && data.date.size() <= 20 &&
+             data.time is string && data.time.size() <= 20 &&
+             data.items is list && data.items.size() <= 20 &&
+             data.subTotal is number && data.subTotal >= 0 &&
+             data.total is number && data.total >= 0 &&
+             data.status is string && data.status in ['Pending', 'Sedang Dikerjakan', 'Selesai'] &&
+             data.createdAt is string && data.createdAt.size() <= 50;
+    }
+
+    match /orders/{orderId} {
+      allow read: if isAdmin();
+      allow delete: if isAdmin();
+      
+      // Allow anyone to create an order
+      allow create: if isValidId(orderId);
+      
+      // Only Admin can update the order (status, extraCosts, etc.)
+      allow update: if isAdmin();
+    }
+
+    match /promos/{promoId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
